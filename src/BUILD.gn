@@ -1,0 +1,119 @@
+# ws-node - C library to support lightweight websocket based service node
+# 
+# Copyright (C) 2015 yquant.com
+# 
+#  This library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU Lesser General Public
+#  License as published by the Free Software Foundation:
+#  version 2.1 of the License.
+# 
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  Lesser General Public License for more details.
+# 
+#  You should have received a copy of the GNU Lesser General Public
+#  License along with this library; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA  02110-1301  USA
+
+libwsn_sources = [
+  "include/wsn.h",
+  "include/wsn/conf_mgr.h",
+  "include/wsn/configs.h",
+  "include/wsn/conn.h",
+  "include/wsn/defs.h",
+  "include/wsn/errors.h",
+  "include/wsn/server.h",
+  "include/wsn/thread_ctx.h",
+  "include/wsn/utils.h",
+  "lib/conf_mgr.c",
+  "lib/configs.c",
+  "lib/conn.c",
+  "lib/errors.c",
+  "lib/server.c",
+  "lib/thread_ctx.c",
+  "lib/utils.c",
+]
+
+config("libwsn_public_config") {
+  include_dirs = [ "include" ]
+}
+
+config("libwsn_config") {
+  include_dirs = [
+    "include",
+    "src/",
+  ]
+}  
+
+static_library("libwsn_static") {
+  sources = libwsn_sources
+
+  configs += [
+    ":libwsn_config",
+  ]
+  
+  public_configs = [
+    ":libwsn_public_config",
+  ]
+  
+  public_deps = [
+    "//third_party/libuv:libuv_static",
+    "//third_party/yajl:yajl_static",
+  ]
+}
+
+config("libwsn_shared_public_config") {
+  defines = [
+    "USING_WSN_SHARED=1",
+  ]
+}
+
+shared_library("libwsn_shared") {
+  output_name = "wsn"
+  
+  sources = libwsn_sources
+
+  defines = [
+    "WSN_IMPLEMENTATION=1"
+  ]
+
+  configs += [
+    ":libwsn_config",
+  ]
+
+  public_configs = [
+    ":libwsn_public_config",
+    ":libwsn_shared_public_config",
+  ]
+  
+  public_deps = [
+    "//third_party/libuv:libuv_shared",
+    "//third_party/yajl:yajl_shared",
+  ]
+}
+
+executable("wsn-hub") {
+  sources = [
+    "main.c",
+  ]
+
+  if (is_win) {
+    sources += [
+      "getopt.c",
+      "getopt.h",
+    ]
+    defines = [
+      "HAVE_UNISTD_H=0",
+    ]
+  } else {
+    defines = [
+      "HAVE_UNISTD_H=1",
+    ]
+  }
+  
+  deps = [
+    ":libwsn_shared",
+  ]
+}
