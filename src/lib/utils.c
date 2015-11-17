@@ -148,7 +148,7 @@ yajl_val wsn_yajl_tree_get(yajl_val node, const char *path, yajl_type type)
     wsn_report_err(WSN_ERR_MALLOC, "wsn_yajl_tree_get() failed to create path_array");
     return NULL;
   }
-  yajl_val val = yajl_tree_get(node, path_array, type);
+  yajl_val val = yajl_tree_get(node, (const char**)path_array, type);
   wsn_string_array_cleanup(path_array);
   return val;
 }

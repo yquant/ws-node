@@ -45,6 +45,11 @@ config("libwsn_config") {
     "include",
     "src/",
   ]
+  if (!is_win) {
+    cflags = [
+      "-std=c99",
+    ]
+  }
 }  
 
 static_library("libwsn_static") {
@@ -110,6 +115,9 @@ executable("wsn-hub") {
   } else {
     defines = [
       "HAVE_UNISTD_H=1",
+    ]
+    cflags = [
+      "-std=c99",
     ]
   }
   
