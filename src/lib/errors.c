@@ -83,3 +83,13 @@ void wsn_report_err(int err, const char *fmt, ...)
     ctx->last_err_str = wsn_strdup(buf);
   }
 }
+
+void wsn_clear_err()
+{
+  wsn_err_ctx_t *ctx = wsn_thread_ctx()->err_ctx;
+  ctx->last_err = 0;
+  if (ctx->last_err_str) {
+    free(ctx->last_err_str);
+  }
+  ctx->last_err_str = NULL;
+}

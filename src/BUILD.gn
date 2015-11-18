@@ -19,6 +19,7 @@
 
 libwsn_sources = [
   "include/wsn.h",
+  "include/wsn/client.h",
   "include/wsn/conf_mgr.h",
   "include/wsn/configs.h",
   "include/wsn/conn.h",
@@ -27,6 +28,7 @@ libwsn_sources = [
   "include/wsn/server.h",
   "include/wsn/thread_ctx.h",
   "include/wsn/utils.h",
+  "lib/client.c",
   "lib/conf_mgr.c",
   "lib/configs.c",
   "lib/conn.c",

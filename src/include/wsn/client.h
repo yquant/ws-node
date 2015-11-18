@@ -19,40 +19,28 @@
  *  MA  02110-1301  USA
  */
 
-#ifndef _WSN_INCL_CONN_H
-#define _WSN_INCL_CONN_H
+#ifndef _WSN_INCL_CLIENT_H
+#define _WSN_INCL_CLIENT_H
+
+#include "uv.h"
 
 #include "wsn/defs.h"
-#include "wsn/server.h"
-#include "wsn/client.h"
-
-typedef enum {
-  WSN_CONN_DIRECTION_IN = 0,
-  WSN_CONN_DIRECTION_OUT = 1
-} wsn_conn_dir_t;
-
-typedef enum {
-  WSN_CONN_STATE_CREATED = 0,
-  WSN_CONN_READING,
-  WSN_CONN_STATE_CLOSED
-} wsn_conn_state_t;
+#include "wsn/configs.h"
 
 typedef struct {
+  uv_getaddrinfo_t getaddrinfo_req;
+  uv_connect_t connect_req;
+  wsn_node_conf_t *conf;
   uv_tcp_t tcp_handle;
+  struct sockaddr host_addr;
+  int connect_timeout;
   int idle_timeout;
   uv_timer_t timer_handle;
-  wsn_server_listen_ctx_t *listen_ctx;
-  wsn_client_ctx_t *client;
-  int direction;
-  int state;
-  char buf[2048];
-  int nread;
-} wsn_conn_ctx_t;
+  uv_loop_t *loop;
+} wsn_client_ctx_t;
 
-WSN_EXPORT wsn_conn_ctx_t* wsn_conn_create(wsn_server_listen_ctx_t *listen_ctx,
-                                           wsn_client_ctx_t *client,
-                                           int idle_timeout, int direction);
-WSN_EXPORT void wsn_conn_close(wsn_conn_ctx_t *conn);
-WSN_EXPORT void wsn_conn_processing(wsn_conn_ctx_t *conn);
+WSN_EXPORT int wsn_client_init(wsn_client_ctx_t *client, wsn_node_conf_t *conf, uv_loop_t *loop);
+WSN_EXPORT int wsn_client_start(wsn_client_ctx_t *client);
+WSN_EXPORT void wsn_client_cleanup(wsn_client_ctx_t *client);
 
-#endif // _WSN_INCL_CONN_H
+#endif // _WSN_INCL_CLIENT_H

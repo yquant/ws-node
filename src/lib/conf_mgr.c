@@ -51,6 +51,8 @@ static void init_default_configs_()
 {
   memset(&all_configs_, 0, sizeof(all_configs_));
   all_configs_.conf_file = WSN_CONF_DEFAULT_CONF_FILE;
+  all_configs_.connect_timeout = WSN_CONF_DEFAULT_CONNECT_TIMEOUT;
+  all_configs_.idle_timeout = WSN_CONF_DEFAULT_IDLE_TIMEOUT;
 }
 
 void init_()
@@ -86,10 +88,22 @@ static yajl_val parse_config_file_()
 
 static int translate_configs_(yajl_val js_configs)
 {
-  all_configs_.servers_conf = wsn_servers_conf_find(&all_configs_.server_count, js_configs);
-  if (all_configs_.servers_conf == NULL) {
+  yajl_val js_connect_timeout = wsn_yajl_tree_get(js_configs, "connect-timeout", yajl_t_number);
+  if (js_connect_timeout) {
+    all_configs_.connect_timeout = YAJL_GET_INTEGER(js_connect_timeout);
+  }
+  yajl_val js_idle_timeout = wsn_yajl_tree_get(js_configs, "idle-timeout", yajl_t_number);
+  if (js_idle_timeout) {
+    all_configs_.idle_timeout = YAJL_GET_INTEGER(js_idle_timeout);
+  }
+  all_configs_.servers_conf = wsn_nodes_conf_find(WSN_NODE_TYPE_SERVER, 
+                                                  &all_configs_.server_count, js_configs);
+  all_configs_.clients_conf = wsn_nodes_conf_find(WSN_NODE_TYPE_CLIENT,
+                                                  &all_configs_.client_count, js_configs);
+  if (all_configs_.servers_conf == NULL && all_configs_.clients_conf == NULL) {
     return wsn_last_err();
   }
+  wsn_clear_err();
   return 0;
 }
 
@@ -109,6 +123,6 @@ int load_()
 void cleanup_()
 {
   for (int i = 0; i < all_configs_.server_count; i++) {
-    wsn_server_conf_cleanup(&all_configs_.servers_conf[i]);
+    wsn_node_conf_cleanup(&all_configs_.servers_conf[i]);
   }
 }

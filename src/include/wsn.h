@@ -29,6 +29,7 @@
 #include "wsn/configs.h"
 #include "wsn/conf_mgr.h"
 #include "wsn/server.h"
+#include "wsn/client.h"
 #include "wsn/conn.h"
 
 #endif // _WSN_INCL_WSN_H

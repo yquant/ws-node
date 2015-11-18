@@ -27,31 +27,44 @@
 #include "wsn/defs.h"
 
 #define WSN_CONF_DEFAULT_CONF_FILE "wsn.conf"
+#define WSN_CONF_DEFAULT_CONNECT_TIMEOUT 5000
+#define WSN_CONF_DEFAULT_IDLE_TIMEOUT 3000
 #define WSN_CONF_DEFAULT_CONN_PROTOCOL 0
 
 enum {
-  WSN_CONN_PROTOCOL_WS = 0,
-  WSN_CONN_PROTOCOL_WSS
+  WSN_CONN_PROTOCOL_RAW = 0,
+  WSN_CONN_PROTOCOL_WS,
+  WSN_CONN_PROTOCOL_WSS,
+};
+
+enum {
+  WSN_NODE_TYPE_SERVER = 0,
+  WSN_NODE_TYPE_CLIENT = 1,
 };
 
 typedef struct {
+  int type;
   char *host;
   unsigned short port;
   int conn_protocol;
-} wsn_server_conf_t;
+} wsn_node_conf_t;
 
 typedef struct {
   char *conf_file;
+  int connect_timeout;
+  int idle_timeout;
   int server_count;
-  wsn_server_conf_t *servers_conf;
+  wsn_node_conf_t *servers_conf;
+  int client_count;
+  wsn_node_conf_t *clients_conf;
 } wsn_all_configs_t;
 
-WSN_EXPORT int wsn_server_conf_init(wsn_server_conf_t *server_conf,
-                                    char *host, unsigned short port, int conn_protocol);
-WSN_EXPORT void wsn_server_conf_cleanup(wsn_server_conf_t *server_conf);
+WSN_EXPORT int wsn_node_conf_init(wsn_node_conf_t *node_conf, int type,
+                                  char *host, unsigned short port, int conn_protocol);
+WSN_EXPORT void wsn_node_conf_cleanup(wsn_node_conf_t *node_conf);
 
 WSN_EXPORT int wsn_conn_protocol_from_str(const char *protocol);
 
-wsn_server_conf_t* wsn_servers_conf_find(int *server_count, yajl_val js_configs);
+wsn_node_conf_t* wsn_nodes_conf_find(int type, int *node_count, yajl_val js_configs);
 
 #endif // _WSN_INCL_CONFIGS_H

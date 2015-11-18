@@ -36,6 +36,7 @@ typedef enum {
   WSN_ERR_GET_ADDR_INFO,
   WSN_ERR_BIND,
   WSN_ERR_LISTEN,
+  WSN_ERR_CONNECT,
 } wsn_err_code_t;
 
 typedef struct {
@@ -50,5 +51,6 @@ WSN_EXPORT int wsn_last_err();
 WSN_EXPORT const char* wsn_last_err_str();
 
 void wsn_report_err(int err, const char *fmt, ...);
+void wsn_clear_err();
 
 #endif // _WSN_INCL_ERRORS_H

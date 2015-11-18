@@ -33,11 +33,13 @@
 
 static const char *prog_name_ = "wsn-hub";
 
-const char *get_prog_name_(void) {
+const char *get_prog_name_(void)
+{
   return prog_name_;
 }
 
-static void usage_(int invalid) {
+static void usage_(int invalid)
+{
   printf("Usage:\n"
          "\n"
          "  %s [-c <config file>] [-h]\n"
@@ -52,7 +54,8 @@ static void usage_(int invalid) {
   exit(invalid ? WSN_ERR_INVALID_CMD_OPTS : 0);
 }
 
-static void parse_opts_(wsn_all_configs_t *configs, int argc, char **argv) {
+static void parse_opts_(wsn_all_configs_t *configs, int argc, char **argv)
+{
   int opt;
 
   while (-1 != (opt = getopt(argc, argv, "c:h"))) {
@@ -69,7 +72,8 @@ static void parse_opts_(wsn_all_configs_t *configs, int argc, char **argv) {
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   int err = 0;
   prog_name_ = wsn_path_file_part(argv[0]);
 
@@ -95,23 +99,49 @@ int main(int argc, char **argv) {
   }
   
   if (!err) {
+    wsn_server_ctx_t *servers = NULL;
+    wsn_client_ctx_t *clients = NULL;
+    
     uv_loop_t *loop = uv_default_loop();
     
-    wsn_server_ctx_t *servers = (wsn_server_ctx_t*)malloc(sizeof(*servers) * configs->server_count);
-    if (servers == NULL) {
-      printf("WSN error: Malloc servers failed!\n");
-      err = WSN_ERR_MALLOC;
-    } else {
-      for (int i = 0; i < configs->server_count; i++) {
-        err = wsn_server_init(&servers[i], &configs->servers_conf[i], loop);
-        if (err) {
-          printf("WSN error: %s!\n", wsn_last_err_str());
-          break;
+    if (configs->server_count) {
+      servers = (wsn_server_ctx_t*)malloc(sizeof(*servers) * configs->server_count);
+      if (servers == NULL) {
+        printf("WSN error: Malloc servers failed!\n");
+        err = WSN_ERR_MALLOC;
+      } else {
+        for (int i = 0; i < configs->server_count; i++) {
+          err = wsn_server_init(&servers[i], &configs->servers_conf[i], loop);
+          if (err) {
+            printf("WSN error: %s!\n", wsn_last_err_str());
+            break;
+          }
+          err = wsn_server_start(&servers[i]);
+          if (err) {
+            printf("WSN error: %s!\n", wsn_last_err_str());
+            break;
+          }
         }
-        err = wsn_server_start(&servers[i]);
-        if (err) {
-          printf("WSN error: %s!\n", wsn_last_err_str());
-          break;
+      }
+    }
+    
+    if (configs->client_count) {
+      clients = (wsn_client_ctx_t*)malloc(sizeof(*clients) * configs->client_count);
+      if (clients == NULL) {
+        printf("WSN error: Malloc clients failed!\n");
+        err = WSN_ERR_MALLOC;
+      } else {
+        for (int i = 0; i < configs->client_count; i++) {
+          err = wsn_client_init(&clients[i], &configs->clients_conf[i], loop);
+          if (err) {
+            printf("WSN error: %s!\n", wsn_last_err_str());
+            break;
+          }
+          err = wsn_client_start(&clients[i]);
+          if (err) {
+            printf("WSN error: %s!\n", wsn_last_err_str());
+            break;
+          }
         }
       }
     }
@@ -128,6 +158,12 @@ int main(int argc, char **argv) {
         wsn_server_cleanup(&servers[i]);
       }
       free(servers);
+    }
+    if (clients) {
+      for (int i = 0; i < configs->client_count; i++) {
+        wsn_client_cleanup(&clients[i]);
+      }
+      free(clients);
     }
     uv_loop_delete(loop);
   }

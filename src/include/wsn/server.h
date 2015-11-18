@@ -37,16 +37,17 @@ typedef struct {
 
 typedef struct wsn_server_ctx {
   uv_getaddrinfo_t getaddrinfo_req;
-  wsn_server_conf_t *conf;
+  wsn_node_conf_t *conf;
   wsn_server_listen_ctx_t *listen_ctxs;
   int listen_ctx_count;
+  int idle_timeout;
   uv_loop_t *loop;
 } wsn_server_ctx_t;
 
 WSN_EXPORT int wsn_server_listen_ctx_init(wsn_server_listen_ctx_t *listen_ctx,
                                           wsn_server_ctx_t *server, struct sockaddr addr);
 WSN_EXPORT void wsn_server_listen_ctx_cleanup(wsn_server_listen_ctx_t *listen_ctx);
-WSN_EXPORT int wsn_server_init(wsn_server_ctx_t *server, wsn_server_conf_t *conf, uv_loop_t *loop);
+WSN_EXPORT int wsn_server_init(wsn_server_ctx_t *server, wsn_node_conf_t *conf, uv_loop_t *loop);
 WSN_EXPORT int wsn_server_start(wsn_server_ctx_t *server);
 WSN_EXPORT void wsn_server_cleanup(wsn_server_ctx_t *server);
 
