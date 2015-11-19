@@ -30,7 +30,8 @@ static void conn_write_(wsn_conn_ctx_t *conn, void *data, unsigned int len);
 
 int wsn_conn_init(wsn_conn_ctx_t* conn, uv_loop_t *loop,
                   wsn_node_conf_t *conf,
-                  int idle_timeout, int direction)
+                  int idle_timeout, int direction,
+                  wsn_conn_close_cb_t close_cb)
 {
   conn->loop = loop;
   conn->conf = conf;
@@ -44,6 +45,7 @@ int wsn_conn_init(wsn_conn_ctx_t* conn, uv_loop_t *loop,
   conn->direction = direction;
   conn->state = WSN_CONN_STATE_CREATED;
   conn->nread = 0;
+  conn->close_cb = close_cb;
   return 0;
 }
 
@@ -51,7 +53,9 @@ static void on_closed_(uv_handle_t* handle)
 {
   wsn_conn_ctx_t *conn = CONTAINER_OF(handle, wsn_conn_ctx_t, io_handle);
   conn->state = WSN_CONN_STATE_CLOSED;
-  free(conn);
+  if (conn->close_cb) {
+    conn->close_cb(conn);
+  }
 }
 
 void wsn_conn_close(wsn_conn_ctx_t *conn)

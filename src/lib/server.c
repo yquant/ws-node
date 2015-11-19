@@ -31,6 +31,8 @@
 # define INET6_ADDRSTRLEN 63
 #endif
 
+static void on_conn_closed_(wsn_conn_ctx_t *conn);
+
 int wsn_server_listen_ctx_init(wsn_server_listen_ctx_t *listen_ctx,
                                wsn_server_ctx_t *server, struct sockaddr *addr)
 {
@@ -83,7 +85,8 @@ static void on_new_connection_(uv_stream_t *stream, int status)
 
   if (wsn_conn_init(conn, listen_ctx->server->loop, listen_ctx->server->conf,
                     listen_ctx->server->idle_timeout,
-                    WSN_CONN_DIRECTION_IN) == 0) {
+                    WSN_CONN_DIRECTION_IN,
+                    on_conn_closed_) == 0) {
     uv_accept(stream, &conn->io_handle.stream);
     wsn_conn_processing(conn);
   }
@@ -224,6 +227,11 @@ int wsn_server_start(wsn_server_ctx_t *server)
     err = WSN_ERR_GET_ADDR_INFO;
   }
   return err;
+}
+
+static void on_conn_closed_(wsn_conn_ctx_t *conn)
+{
+  free(conn);
 }
 
 void wsn_server_cleanup(wsn_server_ctx_t *server)

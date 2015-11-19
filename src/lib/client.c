@@ -31,6 +31,8 @@
 # define INET6_ADDRSTRLEN 63
 #endif
 
+static void on_conn_closed_(wsn_conn_ctx_t *conn);
+
 int wsn_client_init(wsn_client_ctx_t *client, wsn_node_conf_t *conf, uv_loop_t *loop)
 {
   client->conf = conf;
@@ -46,7 +48,8 @@ int wsn_client_init(wsn_client_ctx_t *client, wsn_node_conf_t *conf, uv_loop_t *
     return WSN_ERR_MALLOC;
   }
   return wsn_conn_init(client->conn, client->loop, client->conf,
-                       client->idle_timeout, WSN_CONN_DIRECTION_OUT);
+                       client->idle_timeout, WSN_CONN_DIRECTION_OUT,
+                       on_conn_closed_);
 }
 
 static void on_connect_timer_expire_(uv_timer_t *handle)
@@ -191,6 +194,11 @@ int wsn_client_start(wsn_client_ctx_t *client)
   return err;
 }
 
+static void on_conn_closed_(wsn_conn_ctx_t *conn)
+{
+  free(conn);
+}
+
 void wsn_client_cleanup(wsn_client_ctx_t *client)
 {
   uv_timer_stop(&client->timer_handle);
@@ -198,5 +206,4 @@ void wsn_client_cleanup(wsn_client_ctx_t *client)
   if (client->conn) {
     wsn_conn_close(client->conn);
   }
-  free(client->conn);
 }

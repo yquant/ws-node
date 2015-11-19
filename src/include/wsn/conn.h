@@ -37,6 +37,10 @@ typedef enum {
   WSN_CONN_STATE_CLOSED
 } wsn_conn_state_t;
 
+struct wsn_conn_ctx;
+
+typedef void (*wsn_conn_close_cb_t)(struct wsn_conn_ctx *conn);
+
 typedef struct wsn_conn_ctx {
   wsn_handles_t io_handle;
   uv_write_t write_req;
@@ -48,11 +52,13 @@ typedef struct wsn_conn_ctx {
   int state;
   char buf[2048];
   int nread;
+  wsn_conn_close_cb_t close_cb;
 } wsn_conn_ctx_t;
 
 WSN_EXPORT int wsn_conn_init(wsn_conn_ctx_t* conn, uv_loop_t *loop,
                              wsn_node_conf_t *conf,
-                             int idle_timeout, int direction);
+                             int idle_timeout, int direction,
+                             wsn_conn_close_cb_t close_cb);
 WSN_EXPORT void wsn_conn_close(wsn_conn_ctx_t *conn);
 WSN_EXPORT void wsn_conn_processing(wsn_conn_ctx_t *conn);
 
