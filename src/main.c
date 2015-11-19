@@ -27,16 +27,7 @@
   #include "getopt.h"
 #endif
 
-#include "uv.h"
-
 #include "wsn.h"
-
-static const char *prog_name_ = "wsn-hub";
-
-const char *get_prog_name_(void)
-{
-  return prog_name_;
-}
 
 static void usage_(int invalid)
 {
@@ -50,7 +41,7 @@ static void usage_(int invalid)
          "                         Default: \"wsn.conf\"\n"
          "  -h                     Show this help message.\n"
          "",
-         prog_name_);
+         wsn_prog_name());
   exit(invalid ? WSN_ERR_INVALID_CMD_OPTS : 0);
 }
 
@@ -75,7 +66,7 @@ static void parse_opts_(wsn_all_configs_t *configs, int argc, char **argv)
 int main(int argc, char **argv)
 {
   int err = 0;
-  prog_name_ = wsn_path_file_part(argv[0]);
+  wsn_set_prog_name(wsn_path_file_part(argv[0], 0));
 
   wsn_thread_ctx_t thread_ctx;
   wsn_err_ctx_t err_ctx;
@@ -145,7 +136,7 @@ int main(int argc, char **argv)
         }
       }
     }
-    
+
     if (!err) {
       if (uv_run(loop, UV_RUN_DEFAULT) != 0) {
         err = wsn_last_err();
@@ -170,6 +161,8 @@ int main(int argc, char **argv)
   
   conf_mgr->cleanup();
   wsn_thread_ctx_cleanup(&thread_ctx);
+
+  free(wsn_prog_name());
 
   return err;
 }

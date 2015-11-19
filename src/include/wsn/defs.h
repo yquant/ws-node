@@ -22,6 +22,8 @@
 #ifndef _WSN_INCL_DEFS_H
 #define _WSN_INCL_DEFS_H
 
+#include "uv.h"
+
 #if defined(USING_WSN_SHARED)
   #if defined(WIN32)
 
@@ -49,7 +51,16 @@
   #define WSN_EXPORT_PRIVATE
 #endif
 
-#define CONTAINER_OF(ptr, type, field)                                        \
+#define CONTAINER_OF(ptr, type, field) \
   ((type *) ((char *) (ptr) - ((char *) &((type *) 0)->field)))
+
+typedef union {
+  uv_handle_t handle;
+  uv_stream_t stream;
+  uv_pipe_t pipe;
+  uv_tcp_t tcp;
+} wsn_handles_t;
+
+#define wsn_is_pipe(conf) (conf->conn_protocol == WSN_CONN_PROTOCOL_RAW)
 
 #endif // _WSN_INCL_DEFS_H

@@ -21,7 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+
 #include "wsn/errors.h"
 #include "wsn/conf_mgr.h"
 #include "wsn/conn.h"
@@ -32,17 +32,27 @@
 #endif
 
 int wsn_server_listen_ctx_init(wsn_server_listen_ctx_t *listen_ctx,
-                               wsn_server_ctx_t *server, struct sockaddr addr)
+                               wsn_server_ctx_t *server, struct sockaddr *addr)
 {
   listen_ctx->server = server;
-  listen_ctx->addr = addr;
-  uv_tcp_init(server->loop, &listen_ctx->tcp_handle);
+  if (addr) {
+    listen_ctx->addr = *addr;
+  }
+  if (wsn_is_pipe(listen_ctx->server->conf)) {
+    uv_pipe_init(server->loop, &listen_ctx->io_handle.pipe, 0);
+  } else {
+    uv_tcp_init(server->loop, &listen_ctx->io_handle.tcp);
+  }
   return 0;
+}
+
+static void on_closed_(uv_handle_t* handle)
+{
 }
 
 void wsn_server_listen_ctx_cleanup(wsn_server_listen_ctx_t *listen_ctx)
 {
-  uv_close((uv_handle_t*)&listen_ctx->tcp_handle, NULL);
+  uv_close(&listen_ctx->io_handle.handle, on_closed_);
 }
 
 int wsn_server_init(wsn_server_ctx_t *server, wsn_node_conf_t *conf, uv_loop_t *loop)
@@ -57,33 +67,44 @@ int wsn_server_init(wsn_server_ctx_t *server, wsn_node_conf_t *conf, uv_loop_t *
 
 static void on_new_connection_(uv_stream_t *stream, int status)
 {
-  wsn_server_listen_ctx_t *listen_ctx;
-  wsn_conn_ctx_t *conn;
+  wsn_server_listen_ctx_t *listen_ctx =
+                      CONTAINER_OF(stream, wsn_server_listen_ctx_t, io_handle);
 
   if (status != 0) {
     return;
   }
   
-  listen_ctx = CONTAINER_OF(stream, wsn_server_listen_ctx_t, tcp_handle);
-  conn = wsn_conn_create(listen_ctx, NULL, listen_ctx->server->idle_timeout,
-                         WSN_CONN_DIRECTION_IN);
-  if (conn) {
-    uv_tcp_init(listen_ctx->server->loop, &conn->tcp_handle);
-    uv_accept(stream, (uv_stream_t*)&conn->tcp_handle);
+  wsn_conn_ctx_t *conn = malloc(sizeof(*conn));
+  if (conn == NULL) {
+    wsn_report_err(WSN_ERR_MALLOC, "Malloc conn failed for server (\"%s\")",
+                   listen_ctx->server->conf->host);
+    return;
+  }
+
+  if (wsn_conn_init(conn, listen_ctx->server->loop, listen_ctx->server->conf,
+                    listen_ctx->server->idle_timeout,
+                    WSN_CONN_DIRECTION_IN) == 0) {
+    uv_accept(stream, &conn->io_handle.stream);
     wsn_conn_processing(conn);
   }
 }
 
 static int wsn_server_start_listen_(wsn_server_listen_ctx_t *listen_ctx, uv_loop_t *loop)
 {
-  int err = uv_tcp_bind(&listen_ctx->tcp_handle, &listen_ctx->addr, 0);
+  int err;
+  
+  if (wsn_is_pipe(listen_ctx->server->conf)) {
+    err = uv_pipe_bind(&listen_ctx->io_handle.pipe, listen_ctx->server->conf->host);
+  } else {
+    err = uv_tcp_bind(&listen_ctx->io_handle.tcp, &listen_ctx->addr, 0);
+  }
   if (err) {
     wsn_server_listen_ctx_cleanup(listen_ctx);
     wsn_report_err(WSN_ERR_BIND, "Bind failed for server (\"%s\"): %s",
                    listen_ctx->server->conf->host, uv_strerror(err));
     return WSN_ERR_BIND;
   }
-  err = uv_listen((uv_stream_t*)&listen_ctx->tcp_handle, 128, on_new_connection_);
+  err = uv_listen(&listen_ctx->io_handle.stream, 128, on_new_connection_);
   if (err) {
     wsn_server_listen_ctx_cleanup(listen_ctx);
     wsn_report_err(WSN_ERR_LISTEN, "Listen failed for server (\"%s\"): %s",
@@ -148,7 +169,7 @@ static void on_get_server_addrs_(uv_getaddrinfo_t *req, int status, struct addri
     } else {
       continue;
     }
-    wsn_server_listen_ctx_init(&server->listen_ctxs[n], server, s.addr);
+    wsn_server_listen_ctx_init(&server->listen_ctxs[n], server, &s.addr);
     n++;
   }
 
@@ -165,8 +186,26 @@ static void on_get_server_addrs_(uv_getaddrinfo_t *req, int status, struct addri
 int wsn_server_start(wsn_server_ctx_t *server)
 {
   int err = 0;
-  struct addrinfo hints;
 
+  if (wsn_is_pipe(server->conf)) {
+    server->listen_ctx_count = 1;
+    server->listen_ctxs = 
+      (wsn_server_listen_ctx_t*)malloc(sizeof(server->listen_ctxs[0]));
+    if (server->listen_ctxs == NULL) {
+      err = WSN_ERR_MALLOC;
+      wsn_report_err(err, "Malloc listen contexts for server (\"%s\") failed",
+                     server->conf->host);
+    } else {
+      wsn_server_listen_ctx_init(&server->listen_ctxs[0], server, NULL);
+      err = wsn_server_start_listen_(&server->listen_ctxs[0], server->loop);
+      if (err) {
+        uv_stop(server->loop);
+      }
+    }
+    return err;
+  }
+  
+  struct addrinfo hints;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
@@ -178,7 +217,7 @@ int wsn_server_start(wsn_server_ctx_t *server)
                        server->conf->host,
                        NULL,
                        &hints);
-  if (err != 0) {
+  if (err) {
     wsn_report_err(WSN_ERR_GET_ADDR_INFO,
                    "Failed to start server (\"%s\"), getaddrinfo error: %s",
                    server->conf->host, uv_strerror(err));

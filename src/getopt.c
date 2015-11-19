@@ -40,7 +40,7 @@ static char sccsid[] = "@(#)getopt.c	8.3 (Berkeley) 4/27/95";
   #include <unistd.h>
 #endif
 
-extern const char *get_prog_name_(void);
+extern char *wsn_prog_name();
 
 int	opterr = 1,		/* if error message should be printed */
 	optind = 1,		/* index into parent argv vector */
@@ -93,7 +93,7 @@ int getopt(int nargc, char * const nargv[], const char *ostr)
 			++optind;
 		if (opterr && *ostr != ':')
 			(void)fprintf(stderr,
-			    "%s: illegal option -- %c\n", get_prog_name_(),
+			    "%s: illegal option -- %c\n", wsn_prog_name(),
 			    optopt);
 		return (BADCH);
 	}
@@ -119,7 +119,7 @@ int getopt(int nargc, char * const nargv[], const char *ostr)
 			if (opterr)
 				(void)fprintf(stderr,
 				    "%s: option requires an argument -- %c\n",
-				    get_prog_name_(), optopt);
+				    wsn_prog_name(), optopt);
 			return (BADCH);
 		}
 		place = EMSG;

@@ -26,13 +26,15 @@
 
 #include "wsn/defs.h"
 
+WSN_EXPORT char* wsn_strcat(const char *str1, const char *str2);
+WSN_EXPORT char* wsn_substr(const char *start, const char *end);
 WSN_EXPORT char* wsn_strdup(const char *str);
 WSN_EXPORT char* wsn_strdupn(const char *str, int len);
 WSN_EXPORT char** wsn_string_array_create(const char *str, const char *delimiters);
 WSN_EXPORT void wsn_string_array_cleanup(char **array);
 
 WSN_EXPORT const char wsn_path_sep();
-WSN_EXPORT const char* wsn_path_file_part(const char *path);
+WSN_EXPORT char* wsn_path_file_part(const char *path, int with_ext);
 
 WSN_EXPORT char* wsn_read_all(const char *file_name, int *len);
 

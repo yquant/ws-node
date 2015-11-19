@@ -21,7 +21,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "wsn/errors.h"
 #include "wsn/conf_mgr.h"
@@ -39,7 +38,15 @@ int wsn_client_init(wsn_client_ctx_t *client, wsn_node_conf_t *conf, uv_loop_t *
   client->connect_timeout = wsn_get_conf_mgr()->get_all_configs()->connect_timeout;
   client->idle_timeout = wsn_get_conf_mgr()->get_all_configs()->idle_timeout;
   uv_timer_init(loop, &client->timer_handle);
-  return 0;
+
+  client->conn = malloc(sizeof(wsn_conn_ctx_t));
+  if (client->conn == NULL) {
+    wsn_report_err(WSN_ERR_MALLOC, "Malloc conn failed for client to (\"%s\")",
+                   client->conf->host);
+    return WSN_ERR_MALLOC;
+  }
+  return wsn_conn_init(client->conn, client->loop, client->conf,
+                       client->idle_timeout, WSN_CONN_DIRECTION_OUT);
 }
 
 static void on_connect_timer_expire_(uv_timer_t *handle)
@@ -65,20 +72,23 @@ static void on_connected_(uv_connect_t *req, int status)
   if (status != 0) {
     return;
   }
-  
-  wsn_conn_ctx_t *conn = wsn_conn_create(NULL, client, client->idle_timeout,
-                                         WSN_CONN_DIRECTION_OUT);
-  if (conn) {
-    wsn_conn_processing(conn);
-  }
+
+  wsn_conn_processing(client->conn);
 }
 
 static int wsn_client_start_connect_(wsn_client_ctx_t *client)
 {
+  int err = 0;
+  
   connect_timer_reset_(client);
 
-  int err = uv_tcp_connect(&client->connect_req, &client->tcp_handle,
-                           &client->host_addr, on_connected_);
+  if (wsn_is_pipe(client->conf)) {
+    uv_pipe_connect(&client->connect_req, &client->conn->io_handle.pipe,
+                    client->conf->host, on_connected_);
+  } else {
+    err = uv_tcp_connect(&client->connect_req, &client->conn->io_handle.tcp,
+                         &client->host_addr, on_connected_);
+  }
   if (err) {
     wsn_report_err(WSN_ERR_CONNECT, "Connect to (\"%s\") failed: %s",
                    client->conf->host, uv_strerror(err));
@@ -134,7 +144,6 @@ static void on_get_host_addrs_(uv_getaddrinfo_t *req, int status, struct addrinf
       continue;
     }
     client->host_addr = s.addr;
-    uv_tcp_init(client->loop, &client->tcp_handle);
     break;
   }
 
@@ -149,6 +158,15 @@ static void on_get_host_addrs_(uv_getaddrinfo_t *req, int status, struct addrinf
 int wsn_client_start(wsn_client_ctx_t *client)
 {
   int err = 0;
+  
+  if (wsn_is_pipe(client->conf)) {
+    err = wsn_client_start_connect_(client);
+    if (err) {
+      uv_stop(client->loop);
+    }
+    return err;
+  }
+  
   struct addrinfo hints;
 
   memset(&hints, 0, sizeof(hints));
@@ -164,7 +182,7 @@ int wsn_client_start(wsn_client_ctx_t *client)
                        client->conf->host,
                        NULL,
                        &hints);
-  if (err != 0) {
+  if (err) {
     wsn_report_err(WSN_ERR_GET_ADDR_INFO,
                    "Failed to start client to (\"%s\"), getaddrinfo error: %s",
                    client->conf->host, uv_strerror(err));
@@ -175,5 +193,10 @@ int wsn_client_start(wsn_client_ctx_t *client)
 
 void wsn_client_cleanup(wsn_client_ctx_t *client)
 {
-  uv_close((uv_handle_t*)&client->tcp_handle, NULL);
+  uv_timer_stop(&client->timer_handle);
+
+  if (client->conn) {
+    wsn_conn_close(client->conn);
+  }
+  free(client->conn);
 }

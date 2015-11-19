@@ -22,16 +22,16 @@
 #ifndef _WSN_INCL_CLIENT_H
 #define _WSN_INCL_CLIENT_H
 
-#include "uv.h"
-
 #include "wsn/defs.h"
 #include "wsn/configs.h"
+
+struct wsn_conn_ctx;
 
 typedef struct {
   uv_getaddrinfo_t getaddrinfo_req;
   uv_connect_t connect_req;
   wsn_node_conf_t *conf;
-  uv_tcp_t tcp_handle;
+  struct wsn_conn_ctx *conn;
   struct sockaddr host_addr;
   int connect_timeout;
   int idle_timeout;

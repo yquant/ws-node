@@ -98,12 +98,19 @@ static int translate_configs_(yajl_val js_configs)
   }
   all_configs_.servers_conf = wsn_nodes_conf_find(WSN_NODE_TYPE_SERVER, 
                                                   &all_configs_.server_count, js_configs);
-  all_configs_.clients_conf = wsn_nodes_conf_find(WSN_NODE_TYPE_CLIENT,
-                                                  &all_configs_.client_count, js_configs);
-  if (all_configs_.servers_conf == NULL && all_configs_.clients_conf == NULL) {
+  if (all_configs_.servers_conf == NULL && wsn_last_err() != WSN_ERR_MISSING_CONF_ITEM) {
     return wsn_last_err();
   }
-  wsn_clear_err();
+  all_configs_.clients_conf = wsn_nodes_conf_find(WSN_NODE_TYPE_CLIENT,
+                                                  &all_configs_.client_count, js_configs);
+  if (all_configs_.servers_conf == NULL && wsn_last_err() != WSN_ERR_MISSING_CONF_ITEM) {
+    return wsn_last_err();
+  }
+  if (all_configs_.servers_conf == NULL && all_configs_.clients_conf == NULL) {
+    wsn_report_err(WSN_ERR_MISSING_CONF_ITEM,
+                   "Invalid config file, no node config was found");
+    return WSN_ERR_MISSING_CONF_ITEM;
+  }
   return 0;
 }
 

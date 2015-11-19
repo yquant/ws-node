@@ -26,6 +26,29 @@
 #include "wsn/errors.h"
 #include "wsn/utils.h"
 
+char* wsn_strcat(const char *str1, const char *str2)
+{
+  int len1 = (int)strlen(str1); 
+  int len2 = (int)strlen(str2); 
+  char *dst = (char*)malloc(len1 + len2 + 1);
+  if (dst) {
+    memcpy(dst, str1, len1);
+    memcpy(dst + len1, str2, len2 + 1);
+  }
+  return dst;
+}
+
+char* wsn_substr(const char *start, const char *end)
+{
+  int len = end - start;
+  char *dst = (char*)malloc(len + 1);
+  if (dst) {
+    memcpy(dst, start, len);
+    dst[len] = '\0';
+  }
+  return dst;
+}
+
 char* wsn_strdup(const char *str)
 {
   char *dst = NULL;
@@ -105,10 +128,17 @@ const char wsn_path_sep()
 #endif
 }
 
-const char* wsn_path_file_part(const char *path)
+char* wsn_path_file_part(const char *path, int with_ext)
 {
-  const char* p = strrchr(path, wsn_path_sep());
-  return p + 1;
+  const char* f = strrchr(path, wsn_path_sep());
+  if (f == NULL) {
+    f = path;
+  }
+  const char* e = strrchr(f, '.');
+  if (with_ext || e == NULL) {
+    e = f + strlen(f);
+  }
+  return wsn_substr(f, e);
 }
 
 char* wsn_read_all(const char *file_name, int *len)

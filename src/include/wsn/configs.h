@@ -26,13 +26,22 @@
 
 #include "wsn/defs.h"
 
+#define WSN_CONF_DEFAULT_PROG_NAME "wsn-hub"
+
 #define WSN_CONF_DEFAULT_CONF_FILE "wsn.conf"
 #define WSN_CONF_DEFAULT_CONNECT_TIMEOUT 5000
 #define WSN_CONF_DEFAULT_IDLE_TIMEOUT 3000
-#define WSN_CONF_DEFAULT_CONN_PROTOCOL 0
+#define WSN_CONF_DEFAULT_HOST "127.0.0.1"
+
+#ifdef _WIN32
+  #define WSN_CONF_PIPENAME_PREFIX "\\\\?\\pipe\\"
+#else
+  #define WSN_CONF_PIPENAME_PREFIX "/tmp/"
+#endif
 
 enum {
   WSN_CONN_PROTOCOL_RAW = 0,
+  WSN_CONN_PROTOCOL_TCP,
   WSN_CONN_PROTOCOL_WS,
   WSN_CONN_PROTOCOL_WSS,
 };
@@ -58,6 +67,9 @@ typedef struct {
   int client_count;
   wsn_node_conf_t *clients_conf;
 } wsn_all_configs_t;
+
+WSN_EXPORT void wsn_set_prog_name(char *name);
+WSN_EXPORT char* wsn_prog_name();
 
 WSN_EXPORT int wsn_node_conf_init(wsn_node_conf_t *node_conf, int type,
                                   char *host, unsigned short port, int conn_protocol);

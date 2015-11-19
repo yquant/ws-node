@@ -23,8 +23,7 @@
 #define _WSN_INCL_CONN_H
 
 #include "wsn/defs.h"
-#include "wsn/server.h"
-#include "wsn/client.h"
+#include "wsn/configs.h"
 
 typedef enum {
   WSN_CONN_DIRECTION_IN = 0,
@@ -33,25 +32,27 @@ typedef enum {
 
 typedef enum {
   WSN_CONN_STATE_CREATED = 0,
-  WSN_CONN_READING,
+  WSN_CONN_ACTIVE,
+  WSN_CONN_STATE_CLOSING,
   WSN_CONN_STATE_CLOSED
 } wsn_conn_state_t;
 
-typedef struct {
-  uv_tcp_t tcp_handle;
+typedef struct wsn_conn_ctx {
+  wsn_handles_t io_handle;
+  uv_write_t write_req;
   int idle_timeout;
   uv_timer_t timer_handle;
-  wsn_server_listen_ctx_t *listen_ctx;
-  wsn_client_ctx_t *client;
+  uv_loop_t *loop;
+  wsn_node_conf_t *conf;
   int direction;
   int state;
   char buf[2048];
   int nread;
 } wsn_conn_ctx_t;
 
-WSN_EXPORT wsn_conn_ctx_t* wsn_conn_create(wsn_server_listen_ctx_t *listen_ctx,
-                                           wsn_client_ctx_t *client,
-                                           int idle_timeout, int direction);
+WSN_EXPORT int wsn_conn_init(wsn_conn_ctx_t* conn, uv_loop_t *loop,
+                             wsn_node_conf_t *conf,
+                             int idle_timeout, int direction);
 WSN_EXPORT void wsn_conn_close(wsn_conn_ctx_t *conn);
 WSN_EXPORT void wsn_conn_processing(wsn_conn_ctx_t *conn);
 

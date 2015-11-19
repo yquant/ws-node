@@ -22,8 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "uv.h"
-
 #include "wsn/errors.h"
 #include "wsn/thread_ctx.h"
 

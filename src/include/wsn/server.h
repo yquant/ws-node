@@ -22,15 +22,13 @@
 #ifndef _WSN_INCL_SERVER_H
 #define _WSN_INCL_SERVER_H
 
-#include "uv.h"
-
 #include "wsn/defs.h"
 #include "wsn/configs.h"
 
 struct wsn_server_ctx;
 
 typedef struct {
-  uv_tcp_t tcp_handle;
+  wsn_handles_t io_handle;
   struct sockaddr addr;
   struct wsn_server_ctx *server;
 } wsn_server_listen_ctx_t;
@@ -45,7 +43,7 @@ typedef struct wsn_server_ctx {
 } wsn_server_ctx_t;
 
 WSN_EXPORT int wsn_server_listen_ctx_init(wsn_server_listen_ctx_t *listen_ctx,
-                                          wsn_server_ctx_t *server, struct sockaddr addr);
+                                          wsn_server_ctx_t *server, struct sockaddr *addr);
 WSN_EXPORT void wsn_server_listen_ctx_cleanup(wsn_server_listen_ctx_t *listen_ctx);
 WSN_EXPORT int wsn_server_init(wsn_server_ctx_t *server, wsn_node_conf_t *conf, uv_loop_t *loop);
 WSN_EXPORT int wsn_server_start(wsn_server_ctx_t *server);
