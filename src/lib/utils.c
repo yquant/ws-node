@@ -133,6 +133,8 @@ char* wsn_path_file_part(const char *path, int with_ext)
   const char* f = strrchr(path, wsn_path_sep());
   if (f == NULL) {
     f = path;
+  } else {
+    f = f + 1;
   }
   const char* e = strrchr(f, '.');
   if (with_ext || e == NULL) {
