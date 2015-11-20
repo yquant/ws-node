@@ -29,11 +29,19 @@ typedef struct {
   wsn_err_ctx_t *err_ctx;
 } wsn_thread_ctx_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 WSN_EXPORT int wsn_thread_ctx_key_init();
 
 WSN_EXPORT int wsn_thread_ctx_init(wsn_thread_ctx_t *thread_ctx, wsn_err_ctx_t *err_ctx);
 WSN_EXPORT wsn_thread_ctx_t* wsn_set_thread_ctx(wsn_thread_ctx_t *thread_ctx);
 WSN_EXPORT wsn_thread_ctx_t* wsn_thread_ctx();
 WSN_EXPORT void wsn_thread_ctx_cleanup(wsn_thread_ctx_t *thread_ctx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _WSN_INCL_THREAD_CTX_H

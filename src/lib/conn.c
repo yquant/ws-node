@@ -142,7 +142,7 @@ static void conn_write_(wsn_conn_ctx_t *conn, void *data, unsigned int len)
   conn_timer_reset_(conn);
 }
 
-void wsn_conn_processing(wsn_conn_ctx_t *conn)
+void wsn_conn_start_processing(wsn_conn_ctx_t *conn)
 {
   conn->state = WSN_CONN_ACTIVE;
   conn_write_(conn, "hello\r\n\r\n", 9);

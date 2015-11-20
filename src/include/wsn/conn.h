@@ -55,11 +55,19 @@ typedef struct wsn_conn_ctx {
   wsn_conn_close_cb_t close_cb;
 } wsn_conn_ctx_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 WSN_EXPORT int wsn_conn_init(wsn_conn_ctx_t* conn, uv_loop_t *loop,
                              wsn_node_conf_t *conf,
                              int idle_timeout, int direction,
                              wsn_conn_close_cb_t close_cb);
 WSN_EXPORT void wsn_conn_close(wsn_conn_ctx_t *conn);
-WSN_EXPORT void wsn_conn_processing(wsn_conn_ctx_t *conn);
+WSN_EXPORT void wsn_conn_start_processing(wsn_conn_ctx_t *conn);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _WSN_INCL_CONN_H

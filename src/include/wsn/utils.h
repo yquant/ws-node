@@ -26,6 +26,10 @@
 
 #include "wsn/defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 WSN_EXPORT char* wsn_strcat(const char *str1, const char *str2);
 WSN_EXPORT char* wsn_substr(const char *start, const char *end);
 WSN_EXPORT char* wsn_strdup(const char *str);
@@ -39,5 +43,9 @@ WSN_EXPORT char* wsn_path_file_part(const char *path, int with_ext);
 WSN_EXPORT char* wsn_read_all(const char *file_name, int *len);
 
 WSN_EXPORT yajl_val wsn_yajl_tree_get(yajl_val node, const char *path, yajl_type type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _WSN_INCL_UTILS_H

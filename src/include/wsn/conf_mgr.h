@@ -32,6 +32,14 @@ typedef struct {
   void (*cleanup)();
 } wsn_conf_mgr_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 WSN_EXPORT wsn_conf_mgr_t* wsn_get_conf_mgr();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _WSN_INCL_CONF_MGR_H

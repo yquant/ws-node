@@ -88,7 +88,7 @@ static void on_new_connection_(uv_stream_t *stream, int status)
                     WSN_CONN_DIRECTION_IN,
                     on_conn_closed_) == 0) {
     uv_accept(stream, &conn->io_handle.stream);
-    wsn_conn_processing(conn);
+    wsn_conn_start_processing(conn);
   }
 }
 

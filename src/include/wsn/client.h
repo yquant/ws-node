@@ -39,8 +39,16 @@ typedef struct {
   uv_loop_t *loop;
 } wsn_client_ctx_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 WSN_EXPORT int wsn_client_init(wsn_client_ctx_t *client, wsn_node_conf_t *conf, uv_loop_t *loop);
 WSN_EXPORT int wsn_client_start(wsn_client_ctx_t *client);
 WSN_EXPORT void wsn_client_cleanup(wsn_client_ctx_t *client);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _WSN_INCL_CLIENT_H

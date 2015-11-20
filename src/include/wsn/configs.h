@@ -68,6 +68,10 @@ typedef struct {
   wsn_node_conf_t *clients_conf;
 } wsn_all_configs_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 WSN_EXPORT void wsn_set_prog_name(char *name);
 WSN_EXPORT char* wsn_prog_name();
 
@@ -78,5 +82,9 @@ WSN_EXPORT void wsn_node_conf_cleanup(wsn_node_conf_t *node_conf);
 WSN_EXPORT int wsn_conn_protocol_from_str(const char *protocol);
 
 wsn_node_conf_t* wsn_nodes_conf_find(int type, int *node_count, yajl_val js_configs);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _WSN_INCL_CONFIGS_H

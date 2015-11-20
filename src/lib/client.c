@@ -76,7 +76,7 @@ static void on_connected_(uv_connect_t *req, int status)
     return;
   }
 
-  wsn_conn_processing(client->conn);
+  wsn_conn_start_processing(client->conn);
 }
 
 static int wsn_client_start_connect_(wsn_client_ctx_t *client)

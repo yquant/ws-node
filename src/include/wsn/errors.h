@@ -45,6 +45,10 @@ typedef struct {
   char *last_err_str;
 } wsn_err_ctx_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 WSN_EXPORT int wsn_err_ctx_init(wsn_err_ctx_t *err_ctx);
 WSN_EXPORT void wsn_err_ctx_cleanup(wsn_err_ctx_t *err_ctx);
 
@@ -53,5 +57,9 @@ WSN_EXPORT const char* wsn_last_err_str();
 
 void wsn_report_err(int err, const char *fmt, ...);
 void wsn_clear_err();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _WSN_INCL_ERRORS_H
